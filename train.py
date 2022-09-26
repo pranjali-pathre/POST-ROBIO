@@ -94,8 +94,8 @@ class Trainer:
         # self.models["BasicTransformer"] = crossView.BasicTransformer(8, 128)
         # self.models["BasicTransformer2"] = crossView.BasicTransformer2(8, 128)
         # self.models["BasicTransformer"] = crossView.MultiheadAttention(None, 128, 4, 32)
-        
-        
+
+
         # if self.opt.chandrakar_input_dir != "None":
         #     self.multimodal_input = True
         #     # self.models["ChandrakarEncoder"] = crossView.ChandrakarEncoder(2, [4,4,2,2], 16)
@@ -205,8 +205,8 @@ class Trainer:
             "There are {:d} training items and {:d} validation items\n".format(
                 len(train_dataset),
                 len(val_dataset)))
-    
-  
+
+
     def train(self):
         if not os.path.isdir(self.opt.log_root):
             os.mkdir(self.opt.log_root)
@@ -248,15 +248,15 @@ class Trainer:
 
         # b, c, h, w = features.shape
         # features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w].to(self.device)).reshape(b, c, h, w)
-        
-        
+
+
         # x_feature = features
         # transform_feature, retransform_features = self.models["CycledViewProjection"](features)
         # features = self.models["CrossViewTransformer"](features, transform_feature, retransform_features)
 
         # depth_features = self.models["DepthEncoder"](inputs["depth_gt"])
         # features = self.models["MergeMultimodal"](features,  depth_features)
-        
+
         # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
         # features = self.models["MergeMultimodal"](features,  chandrakar_features)
         # x_feature = retransform_features = transform_feature = features #= depth_features
@@ -309,7 +309,7 @@ class Trainer:
         # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
         # # chandrakar_features = self.models["ChandrakarAttn"](chandrakar_features, chandrakar_features, chandrakar_features)
         # features = self.models["MergeMultimodal"](warped_feature_grid,  chandrakar_features)
-        
+
 
         # if self.multimodal_input:
         #     chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
@@ -335,7 +335,7 @@ class Trainer:
         # chandrakar_features = self.models["BasicTransformer2"](features, features, chandrakar_features)  # Based on RGB similarity, warp chandrakar to entire image.
 
         # features = torch.cat([features, chandrakar_features], dim=1)
-        
+
         # outputs["topview"] = self.models["decoder"](features)
         # outputs["transform_topview"] = self.models["transform_decoder"](transform_feature)
         # if validation:
@@ -381,14 +381,14 @@ class Trainer:
             #         color = cv2.resize(color.numpy().transpose((1,2,0)), dsize=(128, 128)).transpose((2, 0, 1))
             #         self.writer.add_image(f"train_color_gt/{batch_idx}/{log_idx}", color, self.epoch)
 
-        
+
         # self.scheduler.step()
         for loss_name in loss:
             loss[loss_name] /= valid_batches
 
         if len(self.train_loader) > valid_batches:
             print("NaN loss encountered in {} batches".format(len(self.train_loader) - valid_batches))
-            
+
         return loss
 
     def parse_log_data(self, val):
@@ -435,7 +435,7 @@ class Trainer:
 
             if batch_idx >= 4:
                 continue
-            
+
             # COLOR data
             color = invnormalize_imagenet(inputs["color"][0].detach().cpu())
             color = cv2.resize(color.numpy().transpose((1,2,0)), dsize=(128, 128)).transpose((2, 0, 1))
@@ -455,13 +455,13 @@ class Trainer:
             self.writer.add_image(f"bev_pred/{batch_idx}",
                 normalize_image(np.expand_dims(pred, axis=0), (0, 2)), self.epoch)
 
-            if "chandrakar_input" in inputs:            
+            if "chandrakar_input" in inputs:
                 # Chandrakar input data
                 chandrakar_input = inputs["chandrakar_input"][0].detach().cpu()
                 # For chandrakar depth input
                 # chandrakar_input = np.expand_dims(cv2.resize(chandrakar_input.numpy().transpose((1,2,0))[..., 1:], dsize=(128, 128)), axis=0) # Taking the second channel only for depth
                 # chandrakar_input = (chandrakar_input * 1.14) + 1.67
-                
+
                 self.writer.add_image(f"chandrakar_input/{batch_idx}", chandrakar_input, self.epoch)
 
             if "semantics_gt" in inputs:
@@ -472,7 +472,7 @@ class Trainer:
                 overlay[0, semantics==0] *= 2
                 overlay[1, semantics==1] *= 2
                 self.writer.add_image(f"semantics_gt/{batch_idx}", overlay, self.epoch)
-        
+
         for loss_name in loss:
             loss[loss_name] /= len(self.val_loader)
             self.writer.add_scalar(loss_name + '/val', loss[loss_name], global_step=self.epoch)
@@ -483,7 +483,7 @@ class Trainer:
 
         mAP_cls =  dict(unknown=mAP[0], occupied=mAP[1], free=mAP[2])
         mIOU_cls = dict(unknown=iou[0], occupied=iou[1], free=iou[2])
-        
+
         self.writer.add_scalars("mAP_cls", mAP_cls, self.epoch)
         self.writer.add_scalars("mIOU_cls", mIOU_cls, self.epoch)
 
@@ -491,7 +491,7 @@ class Trainer:
         step_info["mIOU_cls"] = self.parse_log_data(mIOU_cls)
         step_info["epoch"] = self.epoch
         step_info['learning_rate'] = {
-            'base': self.parse_log_data(self.model_optimizer.param_groups[1]['lr']), 
+            'base': self.parse_log_data(self.model_optimizer.param_groups[1]['lr']),
             'lr/transform': self.parse_log_data(self.model_optimizer.param_groups[0]['lr'])
         }
 

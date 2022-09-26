@@ -12,7 +12,7 @@ def get_args():
     parser.add_argument("--chandrakar_input_dir", type=str, help="Path to the chandrakar input directory (Only for habitat dataset)")
     parser.add_argument("--floor_path", type=str, help="Path to the floor maps directory (Only for habitat dataset)")
     parser.add_argument("--save_path", type=str, help="Path to save models")
-    
+
     parser.add_argument(
         "--load_weights_folder",
         type=str,
@@ -29,7 +29,8 @@ def get_args():
             "odometry",
             "raw",
             "gibson",
-            "gibson4"],
+            "gibson4",
+            "racklay"],
         help="Data split for training/validation")
     parser.add_argument("--ext", type=str, default="png",
                         help="File extension of the images")
@@ -56,7 +57,7 @@ def get_args():
     parser.add_argument("--grad_clip_value", type=float, default=None,
                         help="gradient clip value")
     parser.add_argument('--lr_steps', default=50, type=int, nargs="+",  # attention
-                        metavar='LRSteps', help='epochs to decay learning rate by 10')                    
+                        metavar='LRSteps', help='epochs to decay learning rate by 10')
     parser.add_argument("--discr_start_epoch", type=int, default=5,
                         help="Starting epoch for discriminator training.")
     parser.add_argument('--weight_decay', '--wd', default=1e-5, type=float,

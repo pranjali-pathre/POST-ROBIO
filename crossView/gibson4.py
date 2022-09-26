@@ -51,7 +51,7 @@ def perspective_camera_intrinsics(f_x, c_x, f_y, c_y):
     camera_intrinsics[2][2] = 1
     camera_intrinsics[0][2] = c_x
     camera_intrinsics[1][2] = c_y
-    
+
     return camera_intrinsics
 
 def orthographic_camera_intrinsics(f_x, c_x, f_y, c_y):
@@ -60,11 +60,11 @@ def orthographic_camera_intrinsics(f_x, c_x, f_y, c_y):
     camera_intrinsics[1][1] = f_y
     camera_intrinsics[0][3] = c_x
     camera_intrinsics[1][3] = c_y
-    
+
     return camera_intrinsics
 
 def img_to_rect( u, v, depth_rect, P2):
-    
+
     cu = P2[0, 2]
     cv = P2[1, 2]
     fu = P2[0, 0]
@@ -84,7 +84,7 @@ def img_to_lid(depth_map, cam_mat, label=None):
 
     depth = depth_map[y_idxs, x_idxs]
     pts_rect = img_to_rect(x_idxs, y_idxs, depth, cam_mat)
-    
+
     if label is not None:
         label_intensity = label[y_idxs, x_idxs]
         filt = label_intensity == 2
@@ -118,7 +118,7 @@ class Gibson4Dataset(data.Dataset):
             "height", "width",
             "baseline", "cam_height", "focal_length",
             "occ_map_size", "floor_path"]
-        
+
         for k in self.dataset_keys:
             setattr(self, k, self.opt.get(k, None))
 
@@ -189,10 +189,10 @@ class Gibson4Dataset(data.Dataset):
             # A.augmentations.CoarseDropout(max_holes=8, max_height=32, max_width=32, min_holes=4, min_height=16, min_width=16, p=0.5)
             # A.augmentations.geometric.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=30, \
             #     interpolation=cv2.INTER_NEAREST, border_mode=cv2.BORDER_CONSTANT, value=0, p=0.8)
-            # A.augmentations.GridDistortion(num_steps=7, distort_limit=0.5, 
-            #                            interpolation=cv2.INTER_NEAREST, border_mode=cv2.BORDER_CONSTANT, 
+            # A.augmentations.GridDistortion(num_steps=7, distort_limit=0.5,
+            #                            interpolation=cv2.INTER_NEAREST, border_mode=cv2.BORDER_CONSTANT,
             #                            value=0, p=0.5)
-            # A.augmentations.Affine(scale=[0.9, 1.1], translate_percent=[-0.1, 0.1], rotate=[-10,10], shear=(-10, 10), 
+            # A.augmentations.Affine(scale=[0.9, 1.1], translate_percent=[-0.1, 0.1], rotate=[-10,10], shear=(-10, 10),
             #                   interpolation=cv2.INTER_NEAREST, cval=0, p=0.5)
             # A.transforms.GaussNoise(p=0.5)
             # A.transforms.MultiplicativeNoise(elementwise=True, p=0.5)
@@ -226,12 +226,12 @@ class Gibson4Dataset(data.Dataset):
                 inputs[k]= process_topview(v, self.bev_width, self.bev_height)
                 # To bring it from 0-255 to 0-2
                 inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
-                
+
             if "static" in k:  # static or static_gt
-                inputs[k] = process_topview(v, self.bev_width, self.bev_height) 
+                inputs[k] = process_topview(v, self.bev_width, self.bev_height)
                 # To bring it from 0-255 to 0-2
                 inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
-            
+
             if "chandrakar_input" == k:
                     inputs[k] = np.transpose(self.ego_map_transform(image=v)['image'], (2, 0, 1))
                     inputs[k] = torch.tensor(inputs[k], dtype=torch.float32)
@@ -246,7 +246,7 @@ class Gibson4Dataset(data.Dataset):
             # x_end = np.clip(x_start + int((0.4 + random.random() * 0.4) * self.height), a_min=int(0.4 * self.height), a_max=self.height)
             x_start, x_end = 0, self.height
             y_start, y_end = 0, int((0.3 + random.random()*0.1)*self.height)
-            
+
             cutmix_src[:, y_start:y_end, x_start:x_end] = cutmix_tgt[:, y_start:y_end, x_start:x_end]
             inputs["color"] = cutmix_src.clone()
 
@@ -284,7 +284,7 @@ class Gibson4Dataset(data.Dataset):
             inputs["chandrakar_input"] = ego_map_fn(folder, frame_index, camera_pose, do_flip)
         # else:
             # ego_map_fn = self.get_ego_map_gt
-    
+
         if os.path.exists(self.floor_path):
             inputs["discr"] = self.get_floor()
         else:
@@ -359,7 +359,7 @@ class Gibson4Dataset(data.Dataset):
             "{}.npy".format(int(frame_index)))
 
         return os.path.isfile(pose_file)
-        
+
     def get_depth(self, folder, frame_index, camera_pose, do_flip):
         folder = os.path.join(self.depth_dir, folder)
 
@@ -373,7 +373,7 @@ class Gibson4Dataset(data.Dataset):
         depth = np.clip(depth, a_min=0, a_max=10)
 
         return depth
-
+# Not req
     def get_semantics(self, folder, frame_index, camera_pose, do_flip, raw=False):
         sem_dir = os.path.join(self.semantics_dir, folder)
         sem_path = os.path.join(sem_dir, "0", camera_pose, "semantics", str(frame_index) + ".png")
@@ -387,10 +387,10 @@ class Gibson4Dataset(data.Dataset):
             semantics = np.logical_or(semantics==3, semantics==28) + 0 # 0 - occupied, 1 - free
 
         return semantics.copy()
-
+# Not req
     def get_pose(self, folder, frame_index, camera_pose, do_flip):
         # Refer to photometric_reconstruction notebook.
-        
+
         cam_to_agent = np.eye(4)
         cam_to_agent[1,1] = -1  # Flip the y-axis of the point-cloud to be pointing upwards
         cam_to_agent[2,2] = -1  # Flip the z-axis of the point-cloud to follow right-handed coordinate system.
@@ -398,24 +398,24 @@ class Gibson4Dataset(data.Dataset):
         pose_dir = os.path.join(self.pose_dir, folder)
         pose_path = os.path.join(pose_dir, "0", camera_pose, "pose", str(frame_index) + ".npy")
         agent_pose = np.load(pose_path, allow_pickle=True).item()
-    
-        rot = Rotation.from_quat([agent_pose['rotation'].x, agent_pose['rotation'].y, 
+
+        rot = Rotation.from_quat([agent_pose['rotation'].x, agent_pose['rotation'].y,
                                 agent_pose['rotation'].z, agent_pose['rotation'].w])
         R = np.eye(4)
         R[:3, :3] = rot.as_matrix()
 
         T = np.eye(4)
         T[:3, 3] = agent_pose['position']
-        
+
         M = (T @ R @ cam_to_agent).astype(np.float32)
 
-        # The images will already be locally flipped. 
+        # The images will already be locally flipped.
         # We need to only flip the camera's global x-coordinate.
         # Refer to registration_notebook.
         M[0,3] *= (1 - 2*do_flip)
 
         return M
-    
+# Not req
     def get_ego_map_gt(self, folder, frame_index, camera_pose, do_flip):
         depth = self.get_depth(folder, frame_index, camera_pose, do_flip)[:self.height, (self.width_ar - self.height)//2 : (self.width_ar + self.height)//2]
         map = self.depth_projector.get_depth_projection(depth)
@@ -429,7 +429,7 @@ class Gibson4Dataset(data.Dataset):
         # ego_map_gt = tmp
 
         return ego_map_gt
-
+# Not req
     def read_ego_map_gt(self, folder, frame_index, camera_pose, do_flip):
         folder = os.path.join(self.chandrakar_input_dir, folder)
 
@@ -439,14 +439,14 @@ class Gibson4Dataset(data.Dataset):
 
         # if do_flip:
         #     bev = np.fliplr(bev)
-        
+
         # # Single channel, 3-value map
         # bev = bev.astype(np.float32)
-        # ego_map = bev.reshape((*bev.shape, 1))  
-        
+        # ego_map = bev.reshape((*bev.shape, 1))
+
         # # 2 channel, 1-value map
         # ego_map = np.zeros((*bev.shape, 2), dtype=np.float32)
-        # ego_map[bev == 1, 0] = 1  # Occupied 
+        # ego_map[bev == 1, 0] = 1  # Occupied
         # ego_map[np.logical_or(bev==1, bev==2), 1]= 1 # Explored
 
         # Chandrakar depth
@@ -466,7 +466,7 @@ class Gibson4Dataset(data.Dataset):
         ego_map[depth!=0, 0] = 1
         ego_map[..., 1] = norm_depth
 
-        # # Discretized depth 
+        # # Discretized depth
         # num_channels = 128
         # depth = np.clip(depth * num_channels/10.0, a_min=0, a_max=num_channels-1).astype(np.uint16)
         # ego_map = np.zeros((depth.size, num_channels), dtype=np.float32)
@@ -494,7 +494,7 @@ class Gibson4Dataset(data.Dataset):
             bev = bev.transpose(pil.FLIP_LEFT_RIGHT)
 
         return bev
-
+# Not req
     def get_floor(self):
         map_file = np.random.choice(os.listdir(self.floor_path))
         map_path = os.path.join(self.floor_path, map_file)
@@ -505,8 +505,8 @@ class Gibson4Dataset(data.Dataset):
 
         full_bev = cv2.imread(os.path.join(self.data_path, folder, '0', camera_pose, "map", str(frame_index) + ".png"), -1)
         full_bev = full_bev[-64:, full_bev.shape[1]//2 - 32: full_bev.shape[1]//2 + 32]
-        # full_bev = full_bev[-101:, full_bev.shape[1]//2 - 51: full_bev.shape[1]//2 + 51]        
-        
+        # full_bev = full_bev[-101:, full_bev.shape[1]//2 - 51: full_bev.shape[1]//2 + 51]
+
         partial_tv = cv2.imread(os.path.join(self.bev_dir, folder, camera_pose, "partial_occ", str(frame_index) + ".png"), -1)
         partial_tv[partial_tv == 127] = 1
         partial_tv[partial_tv == 255] = 2
@@ -514,7 +514,7 @@ class Gibson4Dataset(data.Dataset):
         # partial_tv = partial_tv[-101:, partial_tv.shape[1]//2 - 51: partial_tv.shape[1]//2 + 51]
 
         full_bev[partial_tv == 0] = 127 # Set unknown to occupied
-        
+
         # Convert to partial occupancy format 127 - occupied, 255 - free
         full_bev[full_bev == 255] = 127
         full_bev[full_bev == 0] = 255
@@ -591,18 +591,18 @@ if __name__ == '__main__':
             org_img = cv2.imread(img_path, -1)
             org_img_path = os.path.join(tmp_dir, '{}_{}_{}_org.jpg'.format(folder.replace('/', '_'), camera_pose, fileidx))
             cv2.imwrite(org_img_path, org_img)
-            
+
             color = tmp['color_aug'][idx, ...]
             conv_img = (inv_normalize(color.cpu().detach()).permute(1, 2, 0).numpy() * 255).astype(np.uint8)
             conv_img_path = os.path.join(tmp_dir, '{}_{}_{}_conv.jpg'.format(folder.replace('/', '_'), camera_pose, fileidx))
             cv2.imwrite(conv_img_path, cv2.cvtColor(conv_img, cv2.COLOR_RGB2BGR))
 
-            depth = tmp['depth_gt'][idx, ...].cpu().detach().numpy() 
+            depth = tmp['depth_gt'][idx, ...].cpu().detach().numpy()
             depth = (depth * 6553.5).astype(np.uint16)
             depth_path = os.path.join(tmp_dir, '{}_{}_{}_depth.png'.format(folder.replace('/', '_'), camera_pose, fileidx))
             cv2.imwrite(depth_path, depth)
 
-            bev = tmp['static'][idx, ...].cpu().detach().squeeze(0).numpy() 
+            bev = tmp['static'][idx, ...].cpu().detach().squeeze(0).numpy()
             bev = (bev * 127).astype(np.uint8)
             bev_path = os.path.join(tmp_dir, '{}_{}_{}_bev.png'.format(folder.replace('/', '_'), camera_pose, fileidx))
             cv2.imwrite(bev_path, bev)
