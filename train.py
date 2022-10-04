@@ -164,7 +164,8 @@ class Trainer:
             "argo": crossView.Argoverse,
             "raw": crossView.KITTIRAW,
             "gibson": crossView.GibsonDataset,
-            "gibson4": crossView.Gibson4Dataset
+            "gibson4": crossView.Gibson4Dataset,
+            "racklay" : crossView.Gibson4Dataset
         }
 
         self.dataset = dataset_dict[self.opt.split]
