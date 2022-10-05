@@ -282,7 +282,7 @@ class Gibson4Dataset(data.Dataset):
 
         bev_key = "static" if self.is_train else "static_gt"
         # inputs[bev_key] = self.get_bev(folder, frame_index, camera_pose, do_flip)
-        line_bev = line.replace("img", "debugOutputs")
+        line_bev = line.replace("img/", "debugOutputs/top").replace(".png", "_0.png")
         inputs[bev_key] = self.loader(line_bev)
         inputs["boundary"] = None
 
