@@ -28,13 +28,13 @@ class P_BasicTransformer(nn.Module):
         super(P_BasicTransformer, self).__init__()
 
         self.opt = opt
-        self.pos_emb1D = torch.nn.Parameter(torch.randn(1, 128, 64), requires_grad=True)
-        self.query_emb2D = torch.nn.Parameter(torch.randn(1, 128, 64), requires_grad=True)
+        self.pos_emb1D = torch.nn.Parameter(torch.randn(1, 128, 16), requires_grad=True)
+        self.query_emb2D = torch.nn.Parameter(torch.randn(1, 128, 16), requires_grad=True)
 
         self.encoder = crossView.Encoder(18, self.opt.height, self.opt.width, True) # models["encoder"]
         self.basic_transformer = crossView.MultiheadAttention(None, 128, 4, 32) # models["BasicTransformer"]
         self.decoder = crossView.Decoder(
-            self.encoder.resnet_encoder.num_ch_enc, self.opt.num_class, 512, in_features=128) # models["decoder"]
+            self.encoder.resnet_encoder.num_ch_enc, 2, 512, in_features=128) # models["decoder"]
 
         self.scores = None
 
@@ -47,9 +47,9 @@ class P_BasicTransformer(nn.Module):
         features = self.encoder(x)
 
         b, c, h, w = features.shape
-        print(b, c, h, w)
+        # print(b, c, h, w)
         features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w]).reshape(b, c, h, w)
-        query_emb2D = self.query_emb2D.expand((b, -1, -1)).reshape(b, -1, 8, 8)
+        query_emb2D = self.query_emb2D.expand((b, -1, -1)).reshape(b, -1, 4, 4)
 
         features = self.basic_transformer(features, query_emb2D, features)  # BasicTransformer
 

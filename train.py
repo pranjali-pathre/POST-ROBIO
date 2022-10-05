@@ -240,109 +240,11 @@ class Trainer:
 
         x = inputs["color"]
         # x = torch.cat([inputs["color"], inputs["depth_gt"]], dim=1)
-
         outputs = {}
         outputs["topview"] = self.pipeline(x)
-
+        # print(outputs["topview"].shape)
+        # print(self.weight)
         losses = self.criterion(self.opt, self.weight, inputs, outputs)
-
-        # features = self.models["encoder"](inputs["color"])
-
-        # b, c, h, w = features.shape
-        # features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w].to(self.device)).reshape(b, c, h, w)
-
-
-        # x_feature = features
-        # transform_feature, retransform_features = self.models["CycledViewProjection"](features)
-        # features = self.models["CrossViewTransformer"](features, transform_feature, retransform_features)
-
-        # depth_features = self.models["DepthEncoder"](inputs["depth_gt"])
-        # features = self.models["MergeMultimodal"](features,  depth_features)
-
-        # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-        # features = self.models["MergeMultimodal"](features,  chandrakar_features)
-        # x_feature = retransform_features = transform_feature = features #= depth_features
-        # features = self.models["BasicTransformer"](features)
-
-        # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-        # features = self.models["BasicTransformer2"](chandrakar_features, features, chandrakar_features)
-        # x_feature = retransform_features = transform_feature = features
-
-        # x_feature = retransform_features = transform_feature = features #= depth_features
-        # features = self.models["BasicTransformer"](features, features, features)
-
-        # depth = F.interpolate(input=inputs["depth_gt"], size=(w, h), mode='bilinear')
-        # pc = depth.reshape(b, 1, -1) * self.cam_coords.to(self.device).unsqueeze(dim=0).repeat(b, 1, 1)
-        # pc = pc.transpose(-1, -2)
-        # pc[..., 1] += self.opt.cam_height
-
-        # map_size = self.opt.occ_map_size // 4
-        # cell_size = 3.2/map_size
-
-        # x_indices = (pc[..., 0]//cell_size).reshape(-1).long() + map_size//2
-        # y_indices = pc[..., 1].reshape(-1)
-        # z_indices = (pc[..., 2]//cell_size).reshape(-1).long() + map_size
-        # batch_indices = torch.cat([torch.full([pc.shape[1]], ix, device=x_indices.device, dtype=torch.long) for ix in range(pc.shape[0])])
-
-        # valid_indices = (x_indices >= 0) & (x_indices < map_size) & (z_indices >= 0) & (z_indices < map_size) & (y_indices < self.opt.obstacle_height)
-        # flat_idx = ((batch_indices * map_size * map_size) + (z_indices * map_size) + x_indices)[valid_indices]
-
-        # rank = torch.argsort(flat_idx)
-        # flat_idx = flat_idx[rank]
-
-        # kept = torch.ones_like(flat_idx, device=flat_idx.device, dtype=torch.long)
-        # kept[:-1] = flat_idx[1:] != flat_idx[:-1]
-
-        # b, c, h, w = features.shape
-        # features = features.reshape((b, c, -1)).transpose(-2, -1).reshape((-1, c))
-        # features = features[valid_indices][rank]
-
-        # feature_sum = torch.cumsum(features, dim=0)
-        # x_sum = feature_sum[kept] - features[kept]
-        # x_sum = torch.cat([x_sum[:1], x_sum[1:] - x_sum[:-1]], dim=0)
-
-        # warped_feature_grid = torch.zeros((b * map_size * map_size, c), dtype=torch.float32, device=x_sum.device, requires_grad=True).clone()
-        # warped_feature_grid[flat_idx] = x_sum
-        # warped_feature_grid = warped_feature_grid.reshape((b, map_size, map_size, c)).permute((0, 3, 1, 2)) # B x C x Bh x Bw
-
-        # patch_size = 8
-        # chandrakar_patches = rearrange(inputs["chandrakar_input"], "b c (x p_x) (y p_y) -> b (p_x p_y c) x y", p_x=patch_size, p_y=patch_size)
-
-        # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-        # # chandrakar_features = self.models["ChandrakarAttn"](chandrakar_features, chandrakar_features, chandrakar_features)
-        # features = self.models["MergeMultimodal"](warped_feature_grid,  chandrakar_features)
-
-
-        # if self.multimodal_input:
-        #     chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-        #     # features = self.models["MergeMultimodal"](features,  chandrakar_features)
-
-        #     # Cross-view Transformation Module
-        #     x_feature = features
-        #     transform_feature, retransform_features = self.models["CycledViewProjection"](features)
-        #     features = self.models["CrossViewTransformer"](features, transform_feature, retransform_features)
-
-        # if self.multimodal_input:
-        #     chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-
-        #     # Cross-view Transformation Module
-        #     x_feature = features
-        #     transform_feature, retransform_features = self.models["CycledViewProjectionMultimodal"](features, chandrakar_features)
-        #     features = self.models["CrossViewTransformer"](features, transform_feature, retransform_features)
-
-        # chandrakar_features = self.models["ChandrakarEncoder"](inputs["chandrakar_input"])
-        # features = self.models["MergeMultimodal"](features,  chandrakar_features)
-
-        # x_feature = retransform_features = transform_feature = features #= depth_features
-        # chandrakar_features = self.models["BasicTransformer2"](features, features, chandrakar_features)  # Based on RGB similarity, warp chandrakar to entire image.
-
-        # features = torch.cat([features, chandrakar_features], dim=1)
-
-        # outputs["topview"] = self.models["decoder"](features)
-        # outputs["transform_topview"] = self.models["transform_decoder"](transform_feature)
-        # if validation:
-        #     return outputs
-        # losses = self.criterion(self.opt, self.weight, inputs, outputs, x_feature, retransform_features)
 
         return outputs, losses
 
@@ -358,7 +260,9 @@ class Trainer:
         }
         accumulation_steps = 100
         valid_batches = 0
+
         for batch_idx, inputs in tqdm.tqdm(enumerate(self.train_loader)):
+            # print(inputs.keys())
             outputs, losses = self.process_batch(inputs)
             self.model_optimizer.zero_grad()
 
@@ -443,11 +347,11 @@ class Trainer:
             color = cv2.resize(color.numpy().transpose((1,2,0)), dsize=(128, 128)).transpose((2, 0, 1))
             self.writer.add_image(f"color_gt/{batch_idx}", color, self.epoch)
 
-            # DEPTH data
-            depth = inputs["depth_gt"][0].detach().cpu().squeeze(dim=0).numpy()
-            depth = np.expand_dims(cv2.resize(depth, dsize=(128, 128)), axis=0)
-            depth = (depth * 1.14) + 1.67
-            self.writer.add_image(f"depth/{batch_idx}", normalize_image(depth), self.epoch)
+            # # DEPTH data
+            # depth = inputs["depth_gt"][0].detach().cpu().squeeze(dim=0).numpy()
+            # depth = np.expand_dims(cv2.resize(depth, dsize=(128, 128)), axis=0)
+            # depth = (depth * 1.14) + 1.67
+            # self.writer.add_image(f"depth/{batch_idx}", normalize_image(depth), self.epoch)
 
             # BEV data
             self.writer.add_image(f"bev_gt/{batch_idx}",
@@ -457,23 +361,23 @@ class Trainer:
             self.writer.add_image(f"bev_pred/{batch_idx}",
                 normalize_image(np.expand_dims(pred, axis=0), (0, 2)), self.epoch)
 
-            if "chandrakar_input" in inputs:
-                # Chandrakar input data
-                chandrakar_input = inputs["chandrakar_input"][0].detach().cpu()
-                # For chandrakar depth input
-                # chandrakar_input = np.expand_dims(cv2.resize(chandrakar_input.numpy().transpose((1,2,0))[..., 1:], dsize=(128, 128)), axis=0) # Taking the second channel only for depth
-                # chandrakar_input = (chandrakar_input * 1.14) + 1.67
+            # if "chandrakar_input" in inputs:
+            #     # Chandrakar input data
+            #     chandrakar_input = inputs["chandrakar_input"][0].detach().cpu()
+            #     # For chandrakar depth input
+            #     # chandrakar_input = np.expand_dims(cv2.resize(chandrakar_input.numpy().transpose((1,2,0))[..., 1:], dsize=(128, 128)), axis=0) # Taking the second channel only for depth
+            #     # chandrakar_input = (chandrakar_input * 1.14) + 1.67
 
-                self.writer.add_image(f"chandrakar_input/{batch_idx}", chandrakar_input, self.epoch)
+            #     self.writer.add_image(f"chandrakar_input/{batch_idx}", chandrakar_input, self.epoch)
 
-            if "semantics_gt" in inputs:
-                semantics = inputs["semantics_gt"][0].detach().cpu()
-                semantics = cv2.resize(semantics.numpy().transpose((1,2,0)), dsize=(128, 128), interpolation=cv2.INTER_NEAREST)
+            # if "semantics_gt" in inputs:
+            #     semantics = inputs["semantics_gt"][0].detach().cpu()
+            #     semantics = cv2.resize(semantics.numpy().transpose((1,2,0)), dsize=(128, 128), interpolation=cv2.INTER_NEAREST)
 
-                overlay = np.copy(color) * 0.5
-                overlay[0, semantics==0] *= 2
-                overlay[1, semantics==1] *= 2
-                self.writer.add_image(f"semantics_gt/{batch_idx}", overlay, self.epoch)
+            #     overlay = np.copy(color) * 0.5
+            #     overlay[0, semantics==0] *= 2
+            #     overlay[1, semantics==1] *= 2
+            #     self.writer.add_image(f"semantics_gt/{batch_idx}", overlay, self.epoch)
 
         for loss_name in loss:
             loss[loss_name] /= len(self.val_loader)
@@ -483,8 +387,8 @@ class Trainer:
         iou /= len(self.val_loader)
         mAP /= len(self.val_loader)
 
-        mAP_cls =  dict(unknown=mAP[0], occupied=mAP[1], free=mAP[2])
-        mIOU_cls = dict(unknown=iou[0], occupied=iou[1], free=iou[2])
+        mAP_cls =  dict(unknown=mAP[0], occupied=mAP[1])
+        mIOU_cls = dict(unknown=iou[0], occupied=iou[1])
 
         self.writer.add_scalars("mAP_cls", mAP_cls, self.epoch)
         self.writer.add_scalars("mIOU_cls", mIOU_cls, self.epoch)

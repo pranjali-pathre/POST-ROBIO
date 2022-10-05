@@ -284,7 +284,7 @@ class Gibson4Dataset(data.Dataset):
         # inputs[bev_key] = self.get_bev(folder, frame_index, camera_pose, do_flip)
         line_bev = line.replace("img/", "debugOutputs/top").replace(".png", "_0.png")
         inputs[bev_key] = self.loader(line_bev)
-        inputs["boundary"] = None
+        # inputs["boundary"] = None
 
         # Project Depth to BEV based on height thresholding. (For OccAnt Models)
         # if os.path.exists(self.chandrakar_input_dir):
@@ -323,7 +323,7 @@ class Gibson4Dataset(data.Dataset):
 
         inputs["frame"] = torch.tensor(index)
         inputs["filename"] = self.filenames[index]
-
+        # print(inputs)
         return inputs
 
     def get_color(self, folder, frame_index, camera_pose, do_flip):
