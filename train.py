@@ -152,7 +152,7 @@ class Trainer:
             self.parameters_to_train)
         # self.scheduler = ExponentialLR(self.model_optimizer, gamma=0.98)
         # self.scheduler = StepLR(self.model_optimizer, step_size=step_size, gamma=0.65)
-        self.scheduler = MultiStepLR(self.model_optimizer, milestones=self.opt.lr_steps, gamma=0.1)
+        self.scheduler = MultiStepLR(self.model_optimizer, milestones=self.opt.multi_step, gamma=0.1)
         # self.scheduler = CosineAnnealingLR(self.model_optimizer, T_max=15)  # iou 35.55
 
         self.patch = (1, self.opt.occ_map_size // 2**4, self.opt.occ_map_size // 2**4)
@@ -213,7 +213,8 @@ class Trainer:
             os.mkdir(self.opt.log_root)
 
         for self.epoch in range(self.start_epoch, self.opt.num_epochs + 1):
-            self.adjust_learning_rate(self.model_optimizer, self.epoch, self.opt.lr_steps)
+            # self.adjust_learning_rate(self.model_optimizer, self.epoch, self.opt.lr_steps)
+            self.scheduler.step()
             loss = self.run_epoch()
             output = ("Epoch: %d | lr:%.7f | Loss: %.4f | topview Loss: %.4f | transform_topview Loss: %.4f | "
                       "transform Loss: %.4f"

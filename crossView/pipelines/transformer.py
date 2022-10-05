@@ -29,11 +29,12 @@ class P_BasicTransformer(nn.Module):
 
         self.opt = opt
         self.pos_emb1D = torch.nn.Parameter(torch.randn(1, 128, 64), requires_grad=True)
+        self.query_emb2D = torch.nn.Parameter(torch.randn(1, 128, 64), requires_grad=True)
 
         self.encoder = crossView.Encoder(18, self.opt.height, self.opt.width, True) # models["encoder"]
         self.basic_transformer = crossView.MultiheadAttention(None, 128, 4, 32) # models["BasicTransformer"]
         self.decoder = crossView.Decoder(
-            self.encoder.resnet_encoder.num_ch_enc, self.opt.num_class, self.opt.occ_map_size, in_features=128) # models["decoder"]
+            self.encoder.resnet_encoder.num_ch_enc, self.opt.num_class, 512, in_features=128) # models["decoder"]
 
         self.scores = None
 
@@ -44,11 +45,13 @@ class P_BasicTransformer(nn.Module):
 
     def forward(self, x):
         features = self.encoder(x)
-        
-        b, c, h, w = features.shape
-        features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w]).reshape(b, c, h, w)
 
-        features = self.basic_transformer(features, features, features)  # BasicTransformer
+        b, c, h, w = features.shape
+        print(b, c, h, w)
+        features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w]).reshape(b, c, h, w)
+        query_emb2D = self.query_emb2D.expand((b, -1, -1)).reshape(b, -1, 8, 8)
+
+        features = self.basic_transformer(features, query_emb2D, features)  # BasicTransformer
 
         topview = self.decoder(features)
         self.scores = self.basic_transformer.scores
@@ -77,25 +80,25 @@ class MultiBlockTransformer(nn.Module):
 
         self.bottleneck = [blocks[-1]]
         self.scores = []
-        
+
     def get_attention_map(self):
         return self.scores
-    
+
     def forward(self, x):
         features = self.encoder(x)
-        
+
         b, c, h, w = features.shape
         features = (features.reshape(b, c, -1) + self.pos_emb1D[:, :, :h*w]).reshape(b, c, h, w)
 
-        features = self.transformer(features) 
-        
+        features = self.transformer(features)
+
         topview = self.decoder(features)
 
         self.scores = self.transformer._modules['0'].scores
 
         return topview
-    
-    
+
+
 class BasicTransformer_Old(nn.Module):
     def __init__(self, models, opt):
         super(BasicTransformer_Old, self).__init__()
@@ -116,7 +119,7 @@ class BasicTransformer_Old(nn.Module):
 
     def forward(self, x):
         features = self.encoder(x)
-        
+
         b, c, h, w = features.shape
 
         features = self.BasicTransformer(features)  # BasicTransformer

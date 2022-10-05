@@ -93,7 +93,7 @@ def img_to_lid(depth_map, cam_mat, label=None):
     return pts_rect
 
 def process_topview(topview, w, h):
-    topview = topview.crop((32, 64, 96, 128)) # To crop out the bottom center 3.2x3.2 m map from 6.4x6.4m map
+    # topview = topview.crop((32, 64, 96, 128)) # To crop out the bottom center 3.2x3.2 m map from 6.4x6.4m map
     # topview = topview.crop((13, 27, 115, 128))  # To crop out the bottom center 5.05x5.05 m map from 6.4x6.4m map
     topview = topview.resize((w, h), pil.NEAREST)
     topview = np.array(topview)
@@ -147,9 +147,12 @@ class Gibson4Dataset(data.Dataset):
 
         self.resize = transforms.Resize((self.height, self.width_ar), interpolation=self.interp)
 
-        self.bev_width = self.occ_map_size
-        self.bev_height = self.occ_map_size
-        self.bev_res = 3.2 / self.occ_map_size
+        # self.bev_width = self.occ_map_size
+        self.bev_width = 512
+        # self.bev_height = self.occ_map_size
+        self.bev_height = 512
+        self.bev_res = 0.05
+        # self.bev_res = 3.2 / self.occ_map_size
         # self.bev_res = 5.05 / self.occ_map_size
 
         # Since we are cropping, the field of view changes, but the focal length remains the same.
@@ -177,8 +180,10 @@ class Gibson4Dataset(data.Dataset):
             self.saturation = 0.2
             self.hue = 0.1
 
-        self.load_depth = self.check_depth()
-        self.load_pose = self.check_pose()
+        # self.load_depth = self.check_depth()
+        self.load_depth = 0
+        # self.load_pose = self.check_pose()
+        self.load_pose = 0
 
         # self.depth_projector = DepthProjector(self.opt)
 
@@ -212,43 +217,43 @@ class Gibson4Dataset(data.Dataset):
                 inputs["color"] = self.normalize(img)
                 inputs["color_aug"] = self.normalize(color_aug(img))
 
-            if "cutmix" == k:
-                img =  self.resize(v)
-                inputs["cutmix"] = self.normalize(color_aug(img))
+            # if "cutmix" == k:
+            #     img =  self.resize(v)
+            #     inputs["cutmix"] = self.normalize(color_aug(img))
 
-            if "depth_gt" == k:
-                inputs["depth_gt"] = self.crop_img(v)
+            # if "depth_gt" == k:
+            #     inputs["depth_gt"] = self.crop_img(v)
 
-            if "semantics_gt" == k:
-                inputs["semantics_gt"] = self.crop_img(v)
+            # if "semantics_gt" == k:
+            #     inputs["semantics_gt"] = self.crop_img(v)
 
-            if "discr" == k:
-                inputs[k]= process_topview(v, self.bev_width, self.bev_height)
-                # To bring it from 0-255 to 0-2
-                inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
+            # if "discr" == k:
+            #     inputs[k]= process_topview(v, self.bev_width, self.bev_height)
+            #     # To bring it from 0-255 to 0-2
+            #     inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
 
             if "static" in k:  # static or static_gt
                 inputs[k] = process_topview(v, self.bev_width, self.bev_height)
                 # To bring it from 0-255 to 0-2
                 inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
 
-            if "chandrakar_input" == k:
-                    inputs[k] = np.transpose(self.ego_map_transform(image=v)['image'], (2, 0, 1))
-                    inputs[k] = torch.tensor(inputs[k], dtype=torch.float32)
+            # if "chandrakar_input" == k:
+            #         inputs[k] = np.transpose(self.ego_map_transform(image=v)['image'], (2, 0, 1))
+            #         inputs[k] = torch.tensor(inputs[k], dtype=torch.float32)
 
         # After going through all keys, perform cutmix
-        if "cutmix" in inputs:
-            cutmix_src = inputs["color"]
-            cutmix_tgt = inputs["cutmix"]
-            # y_start = int(random.random() * 0.2 * self.height)
-            # y_end = np.clip(y_start + int((0.1 + random.random() * 0.2) * self.height), a_min=int(0.1 * self.height), a_max=int(0.3 * self.height))
-            # x_start = int(random.random() * 0.4 * self.height)
-            # x_end = np.clip(x_start + int((0.4 + random.random() * 0.4) * self.height), a_min=int(0.4 * self.height), a_max=self.height)
-            x_start, x_end = 0, self.height
-            y_start, y_end = 0, int((0.3 + random.random()*0.1)*self.height)
+        # if "cutmix" in inputs:
+        #     cutmix_src = inputs["color"]
+        #     cutmix_tgt = inputs["cutmix"]
+        #     # y_start = int(random.random() * 0.2 * self.height)
+        #     # y_end = np.clip(y_start + int((0.1 + random.random() * 0.2) * self.height), a_min=int(0.1 * self.height), a_max=int(0.3 * self.height))
+        #     # x_start = int(random.random() * 0.4 * self.height)
+        #     # x_end = np.clip(x_start + int((0.4 + random.random() * 0.4) * self.height), a_min=int(0.4 * self.height), a_max=self.height)
+        #     x_start, x_end = 0, self.height
+        #     y_start, y_end = 0, int((0.3 + random.random()*0.1)*self.height)
 
-            cutmix_src[:, y_start:y_end, x_start:x_end] = cutmix_tgt[:, y_start:y_end, x_start:x_end]
-            inputs["color"] = cutmix_src.clone()
+        #     cutmix_src[:, y_start:y_end, x_start:x_end] = cutmix_tgt[:, y_start:y_end, x_start:x_end]
+        #     inputs["color"] = cutmix_src.clone()
 
     def __len__(self):
         return len(self.filenames)
@@ -262,42 +267,45 @@ class Gibson4Dataset(data.Dataset):
         do_flip = self.is_train and random.random() > 0.5
         do_cutmix = False #self.is_train and random.random() > 0.5
 
-        line = self.filenames[index].split()
-        folder = line[0]
-        camera_pose = line[1]
-        frame_index = int(line[2])
+        # line = self.filenames[index].split()
+        # folder = line[0]
+        # camera_pose = line[1]
+        # frame_index = int(line[2])
 
-        inputs["color"] = self.get_color(folder, frame_index, camera_pose, do_flip)
+        # inputs["color"] = self.get_color(folder, frame_index, camera_pose, do_flip)
+        line = self.filenames[index]
+        inputs["color"] = self.loader(line)
 
-        if do_cutmix:
-            f,c,i = random.choice(self.filenames).split()
-            inputs["cutmix"] = self.get_color(f,i,c, random.random() > 0.5)
+        # if do_cutmix:
+        #     f,c,i = random.choice(self.filenames).split()
+        #     inputs["cutmix"] = self.get_color(f,i,c, random.random() > 0.5)
 
         bev_key = "static" if self.is_train else "static_gt"
-        inputs[bev_key] = self.get_bev(folder, frame_index, camera_pose, do_flip)
-
-        inputs["boundary"] = self.get_boundary(folder, frame_index, camera_pose, do_flip)
+        # inputs[bev_key] = self.get_bev(folder, frame_index, camera_pose, do_flip)
+        line_bev = line.replace("img", "debugOutputs")
+        inputs[bev_key] = self.loader(line_bev)
+        inputs["boundary"] = None
 
         # Project Depth to BEV based on height thresholding. (For OccAnt Models)
-        if os.path.exists(self.chandrakar_input_dir):
-            ego_map_fn = self.read_ego_map_gt
-            inputs["chandrakar_input"] = ego_map_fn(folder, frame_index, camera_pose, do_flip)
+        # if os.path.exists(self.chandrakar_input_dir):
+            # ego_map_fn = self.read_ego_map_gt
+            # inputs["chandrakar_input"] = ego_map_fn(folder, frame_index, camera_pose, do_flip)
         # else:
-            # ego_map_fn = self.get_ego_map_gt
+        #     ego_map_fn = self.get_ego_map_gt
 
-        if os.path.exists(self.floor_path):
-            inputs["discr"] = self.get_floor()
-        else:
-            inputs["discr"] = self.get_bev(folder, frame_index, camera_pose, do_flip)
+        # if os.path.exists(self.floor_path):
+            # inputs["discr"] = self.get_floor()
+        # else:
+            # inputs["discr"] = self.get_bev(folder, frame_index, camera_pose, do_flip)
 
-        if os.path.exists(self.semantics_dir):
-            semantics =  np.expand_dims(self.get_semantics(folder, frame_index, camera_pose, do_flip), 0)
-            inputs["semantics_gt"] = torch.from_numpy(semantics.astype(np.float32))
+        # if os.path.exists(self.semantics_dir):
+            # semantics =  np.expand_dims(self.get_semantics(folder, frame_index, camera_pose, do_flip), 0)
+            # inputs["semantics_gt"] = torch.from_numpy(semantics.astype(np.float32))
 
-        depth = torch.from_numpy(self.get_depth(folder, frame_index, camera_pose, do_flip)).unsqueeze(dim=0)
-        norm_depth = np.clip(depth, a_min=0, a_max=4)
-        norm_depth = (norm_depth - 1.67)/1.14  # mean - 1.67, var=1.14
-        inputs["depth_gt"] = norm_depth
+        # depth = torch.from_numpy(self.get_depth(folder, frame_index, camera_pose, do_flip)).unsqueeze(dim=0)
+        # norm_depth = np.clip(depth, a_min=0, a_max=4)
+        # norm_depth = (norm_depth - 1.67)/1.14  # mean - 1.67, var=1.14
+        # inputs["depth_gt"] = norm_depth
 
         # adjusting intrinsics to match each scale in the pyramid
         inputs["K"] = torch.from_numpy(self.K)
@@ -310,8 +318,8 @@ class Gibson4Dataset(data.Dataset):
 
         self.preprocess(inputs, color_aug)
 
-        if "cutmix" in inputs:
-            del inputs["cutmix"]
+        # if "cutmix" in inputs:
+        #     del inputs["cutmix"]
 
         inputs["frame"] = torch.tensor(index)
         inputs["filename"] = self.filenames[index]
@@ -330,6 +338,7 @@ class Gibson4Dataset(data.Dataset):
 
     def check_depth(self):
         line = self.filenames[0].split()
+        print(line)
         scene_name = line[0]
         camera_pose = line[1]
         frame_index = int(line[2])
@@ -342,7 +351,7 @@ class Gibson4Dataset(data.Dataset):
             "DEPTH",
             "{}.png".format(int(frame_index)))
 
-        return os.path.isfile(depth_img)
+        return 0
 
     def check_pose(self):
         line = self.filenames[0].split()
