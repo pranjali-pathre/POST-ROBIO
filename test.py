@@ -42,7 +42,8 @@ def get_args():
             "argo",
             "3Dobject",
             "odometry",
-            "raw"],
+            "raw",
+            "racklay"],
         help="Data split for training/validation")
 
     configs = edict(vars(parser.parse_args()))

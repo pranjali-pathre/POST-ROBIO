@@ -66,7 +66,7 @@ class MultiBlockTransformer(nn.Module):
         super(MultiBlockTransformer, self).__init__()
 
         self.opt = opt
-        self.pos_emb1D = torch.nn.Parameter(torch.randn(1, 128, 64), requires_grad=True)
+        self.pos_emb1D = torch.nn.Parameter(torch.randn(1, 128, 16), requires_grad=True)
 
         self.encoder = crossView.Encoder(18, self.opt.height, self.opt.width, True) # models["encoder"]
         blocks = []
@@ -76,7 +76,7 @@ class MultiBlockTransformer(nn.Module):
         )
         self.transformer = nn.Sequential(*blocks)
         self.decoder = crossView.Decoder(
-            self.encoder.resnet_encoder.num_ch_enc, self.opt.num_class, self.opt.occ_map_size, in_features=128) # models["decoder"]
+            self.encoder.resnet_encoder.num_ch_enc, 2, 512, in_features=128) # models["decoder"]
 
         self.bottleneck = [blocks[-1]]
         self.scores = []
