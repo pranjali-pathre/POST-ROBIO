@@ -235,7 +235,7 @@ class Gibson4Dataset(data.Dataset):
             if "static" in k:  # static or static_gt
                 inputs[k] = process_topview(v, self.bev_width, self.bev_height)
                 # To bring it from 0-255 to 0-2
-                inputs[k] = torch.tensor(inputs[k] // 127, dtype=torch.int64)
+                inputs[k] = torch.tensor(inputs[k] // 115, dtype=torch.int64)
 
             # if "chandrakar_input" == k:
             #         inputs[k] = np.transpose(self.ego_map_transform(image=v)['image'], (2, 0, 1))

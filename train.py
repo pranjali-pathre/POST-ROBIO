@@ -245,7 +245,6 @@ class Trainer:
         # print(outputs["topview"].shape)
         # print(self.weight)
         losses = self.criterion(self.opt, self.weight, inputs, outputs)
-
         return outputs, losses
 
     def run_epoch(self):
